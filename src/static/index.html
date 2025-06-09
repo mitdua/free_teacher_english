@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeakIA - Assistente de Inglês</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="static/css/index.css">
+    <script src="static/js/app.js" type="module"></script>
+    
+   
+  </head>
+
+  <body>
+    <div class="container-fluid py-4">
+      <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+          
+          <!-- Header flotante -->
+          <div class="floating-header">
+            <div class="glass-card p-4 mb-4">
+              <div class="row align-items-center">
+                <div class="col">
+                  <h1 class="display-6 text-white mb-0">
+                    <i class="bi bi-soundwave me-3"></i>
+                    SpeakIA - Seu Professor de Inglês
+                  </h1>
+                </div>
+                <div class="col-auto">
+                  <div class="d-flex align-items-center">
+                    <span class="status-indicator status-disconnected" id="connectionStatus"></span>
+                    <small class="text-white-50" id="statusText">Desconectado</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel de mensajes -->
+          <div class="glass-card p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="text-white mb-0">
+                <i class="bi bi-chat-dots me-2"></i>
+                Mensagens em tempo real
+              </h5>
+              <button class="btn btn-outline-light btn-sm" id="clearMessages">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+            
+            <div 
+              id="messages" 
+              class="messages-container p-3"
+              style="height: 350px; overflow-y: auto;"
+            >
+              <div class="text-center text-white-50 mt-5">
+                <i class="bi bi-chat-square-dots display-4 mb-3"></i>
+                <p>As mensagens aparecerão aqui...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel de controles -->
+          <div class="glass-card p-4">
+            <h5 class="text-white mb-4">
+              <i class="bi bi-gear me-2"></i>
+              Painel de Controle
+            </h5>
+            
+            <form id="messageForm">
+              <div class="row g-3">
+                <div class="col-12">
+                  <label for="message" class="form-label text-white">
+                    <i class="bi bi-pencil me-2"></i>
+                    Escrever mensagem
+                  </label>
+                  <div class="input-group">
+                    <input 
+                      type="text" 
+                      class="form-control form-control-lg" 
+                      id="message" 
+                      name="message" 
+                      placeholder="Digite sua mensagem aqui..."
+                      style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white;"
+                    />
+                    <button 
+                      type="submit" 
+                      id="sendButton" 
+                      class="btn btn-gradient btn-lg" 
+                      disabled
+                    >
+                      <i class="bi bi-send me-2"></i>
+                      Enviar
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="col-12">
+                  <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <button 
+                      type="button" 
+                      id="startAudioButton" 
+                      class="btn btn-audio btn-lg flex-md-fill"
+                    >
+                      <i class="bi bi-mic me-2"></i>
+                      Iniciar Áudio
+                    </button>
+                    <button 
+                      type="button" 
+                      id="stopAudioButton" 
+                      class="btn btn-outline-light btn-lg flex-md-fill"
+                      style="display: none;"
+                    >
+                      <i class="bi bi-stop-circle me-2"></i>
+                      Parar Áudio
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Panel de estadísticas -->
+          <div class="glass-card p-4 mt-4">
+            <h6 class="text-white mb-3">
+              <i class="bi bi-graph-up me-2"></i>
+              Estatísticas da sessão
+            </h6>
+            <div class="row text-center">
+              <div class="col-4">
+                <div class="text-white">
+                  <div class="display-6 mb-1" id="messageCount">0</div>
+                  <small class="text-white-50">Mensagens</small>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="text-white">
+                  <div class="display-6 mb-1" id="connectionTime">00:00</div>
+                  <small class="text-white-50">Tempo</small>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="text-white">
+                  <div class="display-6 mb-1" id="audioStatus">OFF</div>
+                  <small class="text-white-50">Áudio</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+      // Funcionalidade adicional para a interface melhorada
+      document.addEventListener('DOMContentLoaded', function() {
+        const messageInput = document.getElementById('message');
+        const clearBtn = document.getElementById('clearMessages');
+        const messagesContainer = document.getElementById('messages');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const statusText = document.getElementById('statusText');
+        const startAudioButton = document.getElementById('startAudioButton');
+        const stopAudioButton = document.getElementById('stopAudioButton');
+        const audioStatus = document.getElementById('audioStatus');
+        
+        // Limpar mensagens
+        clearBtn.addEventListener('click', function() {
+          messagesContainer.innerHTML = `
+            <div class="text-center text-white-50 mt-5">
+              <i class="bi bi-chat-square-dots display-4 mb-3"></i>
+              <p>As mensagens aparecerão aqui...</p>
+            </div>
+          `;
+          document.getElementById('messageCount').textContent = '0';
+        });
+        
+        // Função para atualizar o status da conexão
+        function updateConnectionStatus(connected) {
+          if (connected) {
+            connectionStatus.className = 'status-indicator status-connected';
+            statusText.textContent = 'Conectado';
+          } else {
+            connectionStatus.className = 'status-indicator status-disconnected';
+            statusText.textContent = 'Desconectado';
+          }
+        }
+        
+        // Monitorar o status do WebSocket
+        let checkConnectionInterval = setInterval(function() {
+          const sendButton = document.getElementById('sendButton');
+          if (sendButton && !sendButton.disabled) {
+            updateConnectionStatus(true);
+          } else {
+            updateConnectionStatus(false);
+          }
+        }, 1000);
+        
+        // Variável para rastrear se o áudio está ativo
+        let isAudioSessionActive = false;
+        
+        // Interceptar o click do botão "Iniciar Áudio" para atualizar UI
+        startAudioButton.addEventListener('click', function() {
+          isAudioSessionActive = true;
+          setTimeout(function() {
+            startAudioButton.style.display = 'none';
+            stopAudioButton.style.display = 'block';
+            audioStatus.textContent = 'ON';
+          }, 500);
+        });
+        
+        // Função para parar completamente o áudio
+        async function stopAudioCompletely() {
+          try {
+            // Importar a função stopMicrophone
+            const { stopMicrophone } = await import('./static/js/audio-recorder.js');
+            
+            // Parar todos os streams de mídia ativos
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+              // Obter todos os streams ativos e pará-los
+              const devices = await navigator.mediaDevices.enumerateDevices();
+              
+              // Parar qualquer stream que possa estar ativo
+              if (window.micStream) {
+                stopMicrophone(window.micStream);
+              }
+            }
+            
+            // Fechar contextos de áudio se existirem
+            if (window.audioRecorderContext && window.audioRecorderContext.state !== 'closed') {
+              await window.audioRecorderContext.close();
+            }
+            if (window.audioPlayerContext && window.audioPlayerContext.state !== 'closed') {
+              await window.audioPlayerContext.close();
+            }
+            
+            // Resetar variáveis globais
+            window.audioRecorderNode = null;
+            window.audioRecorderContext = null;
+            window.audioPlayerNode = null;
+            window.audioPlayerContext = null;
+            window.micStream = null;
+            
+          } catch (error) {
+            console.log('Erro ao parar áudio:', error);
+          }
+        }
+        
+        // Adicionar funcionalidade ao botão "Parar Áudio"
+        stopAudioButton.addEventListener('click', async function() {
+          isAudioSessionActive = false;
+          
+          // Parar completamente o áudio
+          await stopAudioCompletely();
+          
+          // Atualizar UI imediatamente
+          startAudioButton.style.display = 'block';
+          startAudioButton.disabled = false;  // Importante: reabilitar o botão
+          stopAudioButton.style.display = 'none';
+          audioStatus.textContent = 'OFF';
+          
+          // Forçar que o WebSocket se reconecte em modo não-áudio
+          // Alterar a variável global is_audio
+          if (window.is_audio !== undefined) {
+            window.is_audio = false;
+          }
+          
+          // Fechar e reconectar o websocket
+          if (window.websocket && window.websocket.readyState === WebSocket.OPEN) {
+            window.websocket.close();
+          }
+          
+          console.log('Áudio parado completamente. Pronto para reativar.');
+        });
+        
+        // Contador de tempo de conexão
+        let startTime = Date.now();
+        setInterval(function() {
+          const elapsed = Math.floor((Date.now() - startTime) / 1000);
+          const minutes = Math.floor(elapsed / 60);
+          const seconds = elapsed % 60;
+          document.getElementById('connectionTime').textContent = 
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }, 1000);
+        
+        // Efeitos de foco no input
+        messageInput.addEventListener('focus', function() {
+          this.style.boxShadow = '0 0 20px rgba(40, 167, 69, 0.3)';
+        });
+        
+        messageInput.addEventListener('blur', function() {
+          this.style.boxShadow = 'none';
+        });
+        
+        // Contador de mensagens
+        let messageCount = 0;
+        const observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+              for (let node of mutation.addedNodes) {
+                if (node.nodeName === 'P') {
+                  messageCount++;
+                  document.getElementById('messageCount').textContent = messageCount;
+                }
+              }
+            }
+          });
+        });
+        
+        observer.observe(messagesContainer, { childList: true });
+      });
+    </script>
+  </body>
+</html>
